@@ -33,20 +33,29 @@ helpers do
   alias_method :h, :escape_html
 end
 
+use Rack::Session::Cookie,
+  :expire_after => 3600,
+  :secret => 'change'
+
 get '/' do
   @users = User.all
   erb :index
 end
 
 post '/start' do
-#  shout = Shout.create(:message => params[:message])
+  session[:message] = "start!"
   redirect '/'
 end
 
 post '/stop' do
+  session[:message] = "stop!"
   redirect '/'
 end
 
+#  shout = Shout.create(:message => params[:message])
+#    <% @users.each do |u| %>
+#    <p><q><%=h u.login %></q></p>
+#    <% end %>
 __END__
 
 @@ index
@@ -55,16 +64,15 @@ __END__
     <title>丑三つったー</title>
   </head>
   <body style="font-family: sans-serif;">
-    <h1>Test</h1>
+    <h1>丑三つったー</h1>
+    <%=h session[:message] %>
 
-    <form method=post>
-      <textarea name="message" rows="3"></textarea>
+    <form method="post" action="/start">
       <input type=submit value="おやすみ">
     </form>
-
-    <% @users.each do |u| %>
-    <p><q><%=h u.login %></q></p>
-    <% end %>
+    <form method="post" action="/stop">
+      <input type=submit value="おはよう！">
+    </form>
 
     <div style="position: absolute; bottom: 20px; right: 20px;">
     <img src="/images/appengine.gif"></div>
