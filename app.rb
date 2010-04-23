@@ -1,5 +1,8 @@
 require 'sinatra'
 require 'dm-core'
+require 'net/http'
+require 'uri'
+require 'json'
 
 # Configure DataMapper to use the App Engine datastore 
 DataMapper.setup(:default, "appengine://auto")
@@ -39,6 +42,28 @@ use Rack::Session::Cookie,
 
 get '/' do
   @users = User.all
+  session[:message] = ""
+  erb :index
+end
+
+USERNAME = 'ushi3tter_test'
+PASSWORD = ''
+get '/tl' do
+  uri = URI.parse('http://api.twitter.com/1/statuses/home_timeline.json')
+  Net::HTTP.start(uri.host, uri.port) do |http|
+    request = Net::HTTP::Get.new(uri.request_uri)
+    request.basic_auth(USERNAME, PASSWORD)
+    http.request(request) do |response|
+      str = ''
+      JSON.parse(response.body).each do |status|
+        str += status['screen_name'] if status['screen_name']
+        str += ':'
+        str += status['text'] if status['text']
+        str += '<br>'
+      end
+      session[:message] = str
+    end
+  end
   erb :index
 end
 
@@ -56,25 +81,25 @@ end
 #    <% @users.each do |u| %>
 #    <p><q><%=h u.login %></q></p>
 #    <% end %>
+#    <div style="position: absolute; bottom: 20px; right: 20px;">
+#    <img src="/images/appengine.gif"></div>
 __END__
 
 @@ index
 <html>
   <head>
-    <title>$B1/;0$D$C$?!<(B</title>
+    <title>丑三つったー</title>
   </head>
   <body style="font-family: sans-serif;">
-    <h1>$B1/;0$D$C$?!<(B</h1>
-    <%=h session[:message] %>
+    <h1>丑三つったー</h1>
+    <%= session[:message] %>
 
     <form method="post" action="/start">
-      <input type=submit value="$B$*$d$9$_(B">
+      <input type=submit value="おやすみ">
     </form>
     <form method="post" action="/stop">
-      <input type=submit value="$B$*$O$h$&!*(B">
+      <input type=submit value="おはよう！">
     </form>
 
-    <div style="position: absolute; bottom: 20px; right: 20px;">
-    <img src="/images/appengine.gif"></div>
   </body>
 </html>
